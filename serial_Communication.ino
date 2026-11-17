@@ -53,10 +53,10 @@ void CommnunicationBeetle(){
       // 태그 코드만 '_' 로 join → URL-safe(영숫자+언더바)라 인코딩 불필요.
       // 예: "G1P1_GxP0_GxP0". 서버는 explode("_", value) 로 배열 파싱.
       // 3개 다 "GxP0"(미검출)면 매 루프 동일값 재전송이라 스팸이므로 스킵하고,
-      // 하나라도 실제 태그(마지막 자리 != '0')면 전송한다.
+      // 하나라도 실제 태그(GxP0 이 아닌 값)면 전송한다.
       // 여기서 바로 Send(HTTP 왕복)하면 오디오 재생(TagCount)이 그만큼 늦어지므로
       // 값만 보관해두고 실제 전송은 오디오가 나간 뒤 FlushPendingTagSend()에서 한다.
-      bool hasMeaningfulTag = (tag1[3] != '0') || (tag2[3] != '0') || (tag3[3] != '0');
+      bool hasMeaningfulTag = !IsEmptyTagSlot(tag1) || !IsEmptyTagSlot(tag2) || !IsEmptyTagSlot(tag3);
       if (hasMeaningfulTag) {
         pendingTagValue = tag1 + "_" + tag2 + "_" + tag3;
         tagValuePending = true;
@@ -92,6 +92,13 @@ void FlushPendingTagSend(){
   has2wifi.Send((String)(const char*)my["device_name"], "tagged_players", pendingTagValue);
 }
 
+// Beetle 은 빈 슬롯을 "GxP0" 으로 보낸다. 마지막 자리 '0' 만 보면 실제 글러브
+// G1P0/G2P0 까지 빈 슬롯으로 오판해 탈출 인원에서 빠지므로 값 전체를 비교한다.
+bool IsEmptyTagSlot(const String& playerNum)
+{
+  return playerNum == "GxP0";
+}
+
 bool PlayerDetector(String playerNum)
 {
   // 길이 방어: playerNum[3] 접근 전 확인
@@ -101,7 +108,7 @@ bool PlayerDetector(String playerNum)
     return false;
   }
 
-  if(playerNum[3] == '0')
+  if(IsEmptyTagSlot(playerNum))
     return false;
 
   has2wifi.Receive(playerNum);

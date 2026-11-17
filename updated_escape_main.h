@@ -46,6 +46,7 @@ void (*ptrCurrentMode)(); // 현재모드 저장용 포인터 함수
 //Communication*********************************************************
 void CommnunicationBeetle();
 bool PlayerDetector(String playerNum);
+bool IsEmptyTagSlot(const String& playerNum);
 HardwareSerial toSubSerial(1); //
 String tag1;
 String tag2;
